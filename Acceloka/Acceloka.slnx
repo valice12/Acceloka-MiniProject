@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../Acceloka.Entities/Acceloka.Entities.csproj" />
+  <Project Path="Acceloka.csproj" />
+</Solution>
