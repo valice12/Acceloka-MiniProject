@@ -1,28 +1,46 @@
 ﻿CREATE DATABASE ACCELOKA;
-GO 
+GO
 
 USE ACCELOKA;
 GO
 
 CREATE TABLE Ticket(
-	TicketCode INT IDENTITY(1,1) PRIMARY KEY ,
-	TicketName VARCHAR(50) NOT NULL,
-	EventDateStart DATE DEFAULT GETDATE(), 
-	Quantity INT DEFAULT 1,
-	CategoryName VARCHAR(50) NOT NULL,
-	Price INT NOT NULL
+    TicketCode UNIQUEIDENTIFIER NOT NULL 
+        CONSTRAINT PK_Ticket PRIMARY KEY DEFAULT NEWID(),
+
+    TicketName VARCHAR(255) NOT NULL,
+    CategoryName VARCHAR(255) NOT NULL,
+    EventDateStart DATETIMEOFFSET NOT NULL,
+    Quota INT NOT NULL DEFAULT 0,
+    Price DECIMAL(18, 2) NOT NULL,
+    PurchaseDate DATETIMEOFFSET NOT NULL 
+        CONSTRAINT DF_BookedTicket_PurchaseDate DEFAULT SYSDATETIMEOFFSET(),
+    ScheduledDate DATETIMEOFFSET NOT NULL 
+        CONSTRAINT DF_BookedTicket_ScheduledDate DEFAULT SYSDATETIMEOFFSET(),
+
+    CreatedAt DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+    CreatedBy VARCHAR(255) NOT NULL DEFAULT 'SYSTEM',
+    UpdatedAt DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+    UpdatedBy VARCHAR(255) NOT NULL DEFAULT 'SYSTEM'
 )
+GO
+
 
 CREATE TABLE BookedTicket(
-	BookedId INT IDENTITY(1,1) PRIMARY KEY,
-	TicketCode INT FOREIGN KEY REFERENCES Ticket NOT NULL,
-	EventDate DATE NOT NULL, 
-	Quantity INT NOT NULL, 
-	Price INT NOT NULL
+    BookedTicketId UNIQUEIDENTIFIER NOT NULL
+        CONSTRAINT PK_BookedTicket PRIMARY KEY DEFAULT NEWID(),
 
--- TicketName tidak masuk karena redundant dan ada kemungkinan kesalahan penulisan sehingga berbeda makna
--- CategoryName juga memiliki Kasus yang serupa dengan TicketName
+    TicketCode UNIQUEIDENTIFIER NOT NULL
+        CONSTRAINT FK_BookedTicket_Ticket FOREIGN KEY REFERENCES Ticket(TicketCode),
+
+    Quantity INT NOT NULL,
+    Price DECIMAL(18, 2) NOT NULL,
+    EventDateEnd DATETIMEOFFSET NOT NULL
+        CONSTRAINT DF_Ticket_EventDateEnd DEFAULT SYSDATETIMEOFFSET(),
+
+    CreatedAt DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+    CreatedBy VARCHAR(255) NOT NULL DEFAULT 'SYSTEM',
+    UpdatedAt DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+    UpdatedBy VARCHAR(255) NOT NULL DEFAULT 'SYSTEM'
 )
-
-SELECT * FROM Ticket t
-JOIN BookedTicket bt on t.TicketCode = Bt.TicketCode
+GO

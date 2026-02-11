@@ -27,30 +27,54 @@ public partial class AccelokaContext : DbContext
     {
         modelBuilder.Entity<BookedTicket>(entity =>
         {
-            entity.HasKey(e => e.BookedId).HasName("PK__BookedTi__FA2CBA5A6978F290");
-
             entity.ToTable("BookedTicket");
+
+            entity.Property(e => e.BookedTicketId).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetimeoffset())");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasDefaultValue("SYSTEM");
+            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.PurchaseDate).HasDefaultValueSql("(sysdatetimeoffset())", "DF_BookedTicket_PurchaseDate");
+            entity.Property(e => e.ScheduledDate).HasDefaultValueSql("(sysdatetimeoffset())", "DF_BookedTicket_ScheduledDate");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysdatetimeoffset())");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasDefaultValue("SYSTEM");
 
             entity.HasOne(d => d.TicketCodeNavigation).WithMany(p => p.BookedTickets)
                 .HasForeignKey(d => d.TicketCode)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__BookedTic__Ticke__4D94879B");
+                .HasConstraintName("FK_BookedTicket_Ticket");
         });
 
         modelBuilder.Entity<Ticket>(entity =>
         {
-            entity.HasKey(e => e.TicketCode).HasName("PK__Ticket__598CF7A20D8CBC40");
+            entity.HasKey(e => e.TicketCode);
 
             entity.ToTable("Ticket");
 
+            entity.Property(e => e.TicketCode).HasDefaultValueSql("(newid())");
             entity.Property(e => e.CategoryName)
-                .HasMaxLength(50)
+                .HasMaxLength(255)
                 .IsUnicode(false);
-            entity.Property(e => e.EventDateStart).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Quantity).HasDefaultValue(1);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetimeoffset())");
+            entity.Property(e => e.CreatedBy)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasDefaultValue("SYSTEM");
+            entity.Property(e => e.EventDateEnd).HasDefaultValueSql("(sysdatetimeoffset())", "DF_Ticket_EventDateEnd");
+            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TicketName)
-                .HasMaxLength(50)
+                .HasMaxLength(255)
                 .IsUnicode(false);
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysdatetimeoffset())");
+            entity.Property(e => e.UpdatedBy)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasDefaultValue("SYSTEM");
         });
 
         OnModelCreatingPartial(modelBuilder);
