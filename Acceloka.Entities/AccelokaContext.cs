@@ -27,17 +27,20 @@ public partial class AccelokaContext : DbContext
     {
         modelBuilder.Entity<BookedTicket>(entity =>
         {
+            entity.HasKey(e => e.Id).HasName("PK_BookedTicket_Id");
+
             entity.ToTable("BookedTicket");
 
-            entity.Property(e => e.BookedTicketId).HasDefaultValueSql("(newid())");
+            entity.HasIndex(e => e.BookedTicketId, "IX_BookedTicket_BookedTicketId");
+
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetimeoffset())");
             entity.Property(e => e.CreatedBy)
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasDefaultValue("SYSTEM");
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
-            entity.Property(e => e.PurchaseDate).HasDefaultValueSql("(sysdatetimeoffset())", "DF_BookedTicket_PurchaseDate");
-            entity.Property(e => e.ScheduledDate).HasDefaultValueSql("(sysdatetimeoffset())", "DF_BookedTicket_ScheduledDate");
+            entity.Property(e => e.PurchaseDate).HasDefaultValueSql("(sysdatetimeoffset())");
+            entity.Property(e => e.ScheduledDate).HasDefaultValueSql("(sysdatetimeoffset())");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysdatetimeoffset())");
             entity.Property(e => e.UpdatedBy)
                 .HasMaxLength(255)
@@ -65,7 +68,6 @@ public partial class AccelokaContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasDefaultValue("SYSTEM");
-            entity.Property(e => e.EventDateEnd).HasDefaultValueSql("(sysdatetimeoffset())", "DF_Ticket_EventDateEnd");
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TicketName)
                 .HasMaxLength(255)

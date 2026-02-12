@@ -21,69 +21,86 @@ namespace Acceloka.Controllers
 
         // GET: api/v1/get-booked-ticket/{Guid}
         [HttpGet("get-booked-ticket/{BookedTicketId}")]
-        public async Task<IActionResult> GetBookedTicket([FromRoute] Guid? BookedTicketId)
+        public async Task<IActionResult> GetBookedTicket([FromRoute] Guid BookedTicketId)
         {
             if (ModelState.IsValid == false) return BadRequest("Error");
-
-            if (!BookedTicketId.HasValue)
+            
+            try
             {
-                return BadRequest(new
+                var result = await _service.GetBookedTicketList(BookedTicketId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new ProblemDetails
                 {
-                    BookedTicketId = "The BookedTicketId field is required."
+                    Title = "Not Found",
+                    Detail = ex.Message,
+                    Status = 404
                 });
             }
-
-            // Panggil Service
-            var data = await _service.GetBookedTicketListById(BookedTicketId.Value);
-
-            // Cek Data Kosong
-            if (data == null || !data.Any())
+            catch (Exception ex)
             {
-                return Problem(
-                    detail: $"Booked Ticket dengan ID '{BookedTicketId}' tidak ada di database",
-                    statusCode: 404,
-                    title: "Data Not Found"
-                );
-            }
-
-            // Logic Grouping Output
-            var response = data
-                .GroupBy(t => t.TicketCodeNavigation.CategoryName)
-                .Select(Group => new
+                return StatusCode(500, new ProblemDetails
                 {
-                    QtyPerCategory = Group.Sum(t => t.Quantity),
-                    CategoryName = Group.Key,
-                    Tickets = Group.Select(t => new
-                    {
-                        TicketCode = t.TicketCode, // Sudah GUID
-                        TicketName = t.TicketCodeNavigation.TicketName,
-                        // Format DateTimeOffset ke String yang mudah dibaca
-                        eventDate = t.TicketCodeNavigation.EventDateStart != default(DateTimeOffset)
-                            ? t.TicketCodeNavigation.EventDateStart.ToString("dd-MM-yyyy") + " 00:00"
-                            : null
-                    }).ToList()
+                    Title = "Internal Server Error",
+                    Detail = ex.Message,
+                    Status = 500
                 });
-
-
-            return Ok(response);
+            }
         }
 
 
         // Add this POST action to ControllerBookedTicket
         // Expect JSON in the request body. Validate null body to avoid 500.
-        [HttpPost("create-booked-ticket")]
-        public async Task<IActionResult> PostBookTicket([FromBody] ModelBookedTicketCreateRequest request)
+        [HttpPost("book-ticket")]
+        public async Task<IActionResult> BookTicket([FromBody] ModelBookTicketRequest request)
         {
-            if (request == null)
-            {
-                return BadRequest(new { error = "Request body is required and must be valid JSON." });
-            }
 
             if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-            var Data = await _service.PostBookedTicket(request);
+            if (request == null || request.Tickets == null || !request.Tickets.Any())
+            {
+                return BadRequest(new ProblemDetails
+                {   
+                    Title = "Validation Error",
+                    Detail = "Request body cannot be null or empty.",
+                    Status = 400
+                });
+            }
 
-            return Ok(Data);
+            try
+            {
+                var result = await _service.PostBookedTicket(request);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Not Found",
+                    Detail = ex.Message,
+                    Status = 404
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Validation Error",
+                    Detail = ex.Message,
+                    Status = 400
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ProblemDetails
+                {
+                    Title = "Internal Server Error",
+                    Detail = ex.Message,
+                    Status = 500
+                });
+            }
         }
 
         // PUT api/<ControllerBookedTicket>/5
@@ -94,7 +111,7 @@ namespace Acceloka.Controllers
         {
             try
             {
-                var result = await _service.EditBookedTIcketQuantity(BookedTicketId, request);
+                var result = await _service.EditBookedTicketQuantity(BookedTicketId, request);
 
                 return Ok(result);
             }
@@ -127,8 +144,8 @@ namespace Acceloka.Controllers
 
             }
         }
-            // DELETE api/<ControllerBookedTicket>/5
-            [HttpDelete("revoke-ticket/{BookedTicketId}/{TicketCode}/{Quantity}")]
+        // DELETE api/<ControllerBookedTicket>/5
+        [HttpDelete("revoke-ticket/{BookedTicketId}/{TicketCode}/{Quantity}")]
         public async Task<IActionResult> RevokeTicket(
             [FromRoute] Guid BookedTicketId, 
             [FromRoute] Guid TicketCode, 

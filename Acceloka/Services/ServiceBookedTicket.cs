@@ -17,59 +17,113 @@ namespace Acceloka.Services
             _db = db;
         }
 
-        public async Task<List<BookedTicket>> GetBookedTicketList(ModelBookedTicketSearchRequest request)
+        public async Task<List<ModelBookedTicketDetailResponse>> GetBookedTicketList(Guid BookedTicketId)
         {
             var result = await _db.BookedTickets
                 .Include( bt => bt.TicketCodeNavigation)
-                .ToListAsync();
-
-            foreach (var item in result)
-            {
-                if (item.TicketCodeNavigation != null) item.TicketCodeNavigation.BookedTickets = null;
-            }
-            return result;
-        }
-
-        public async Task<List<BookedTicket>> GetBookedTicketListById(Guid BookedTicketId)
-        {
-            var result = await _db.BookedTickets
-                .Include(bt => bt.TicketCodeNavigation)
                 .Where(bt => bt.BookedTicketId == BookedTicketId)
+                .AsNoTracking()
                 .ToListAsync();
 
-            return result;
+            if (!result.Any())
+            {
+                throw new KeyNotFoundException($"Booked Ticket with ID {BookedTicketId} not found");
+            }
+
+            var NewResult = result
+                .GroupBy(bt => bt.TicketCodeNavigation.CategoryName)
+                .Select(group => new ModelBookedTicketDetailResponse
+                {
+                    CategoryName = group.Key,
+                    QuantityperCategory = group.Sum(bt => bt.Quantity),
+                    Tickets = group.Select(bt => new BookedTicketItemDetailDTO
+                    {
+                        TicketCode = bt.TicketCode,
+                        TicketName = bt.TicketCodeNavigation.TicketName,
+                        EventDate = bt.TicketCodeNavigation.EventDateStart.ToString()
+                    }).ToList()
+                }).ToList();
+
+            return NewResult;
         }
 
-        public async Task<string> PostBookedTicket(ModelBookedTicketCreateRequest request)
+        public async Task<ModelBookTicketResponse> PostBookedTicket(ModelBookTicketRequest request)
         {
-            var data = new BookedTicket()
+            var TransactionId = Guid.NewGuid();
+            var BookedTicketsToInsert = new List<BookedTicket>();
+
+            var RequestTicketCodes = request.Tickets
+                .Select(t => t.TicketCode).ToList();
+
+            var MasterTickets = await _db.Tickets
+                .Where(t => RequestTicketCodes.Contains(t.TicketCode))
+                .ToListAsync();
+
+            foreach (var Item in request.Tickets)
             {
-                // 1. Data System (Wajib di-generate di sini karena tidak ada di JSON user)
-                BookedTicketId = Guid.NewGuid(), // Generate ID baru
-                CreatedAt = DateTimeOffset.UtcNow,
-                CreatedBy = "System", // Atau ambil dari User context jika ada auth
-                UpdatedAt = DateTimeOffset.UtcNow,
-                UpdatedBy = "System",
-                PurchaseDate = DateTimeOffset.UtcNow,
+                var MasterTicket = MasterTickets
+                    .FirstOrDefault(mt => mt.TicketCode == Item.TicketCode);
+                if (MasterTicket == null)
+                {
+                    throw new KeyNotFoundException($"Ticket with TicketCode {Item.TicketCode} not found");
+                }
+                if (MasterTicket.EventDateStart <= DateTimeOffset.UtcNow)
+                {
+                    throw new InvalidOperationException($"Cannot book ticket for TicketCode {Item.TicketCode} as the event has already started.");
+                }
+                if (MasterTicket.Quota < Item.Quantity)
+                {
+                    throw new InvalidOperationException($"Not enough quota for TicketCode {Item.TicketCode}. Available: {MasterTicket.Quota}, Requested: {Item.Quantity}");
+                }
+                MasterTicket.Quota -= Item.Quantity;
 
-                // 2. Data Input User (Mapping dari Request)
-                TicketCode = request.TicketCode,
-                Quantity = request.Quantity,
-                Price = request.Price,
-                ScheduledDate = request.ScheduledDate
-            };
+                var NewBooking = new BookedTicket
+                {
+                    BookedTicketId = TransactionId,
+                    TicketCode = MasterTicket.TicketCode,
+                    Quantity = Item.Quantity,
+                    Price = MasterTicket.Price,
+                    ScheduledDate = MasterTicket.EventDateStart,
+                    PurchaseDate = DateTimeOffset.UtcNow,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    CreatedBy = "System",
+                    UpdatedAt = DateTimeOffset.UtcNow,
+                    UpdatedBy = "System",
 
-            _db.Add(data);
+                    TicketCodeNavigation = MasterTicket
+                };
+                BookedTicketsToInsert.Add(NewBooking);
+            }
+
+            _db.BookedTickets.AddRange(BookedTicketsToInsert);
             await _db.SaveChangesAsync();
 
-            return "Success";
+            var CategoriesGroup = BookedTicketsToInsert
+                .GroupBy(bt => bt.TicketCodeNavigation.CategoryName)
+                .Select(g => new CategorySummaryDTO
+                {
+                    CategoryName = g.Key,
+                    SummaryPrice = g.Sum(bt => bt.Price * bt.Quantity),
+                    Tickets = g.Select(bt => new BookedTicketDetailDTO
+                    {
+                        TicketCode = bt.TicketCode,
+                        TicketName = bt.TicketCodeNavigation.TicketName,
+                        Price = bt.Price,
+                    }).ToList()
+                }).ToList();
+
+            return new ModelBookTicketResponse
+            {
+                PriceSummary = BookedTicketsToInsert.Sum(bt => bt.Price * bt.Quantity),
+                TicketsPerCategory = CategoriesGroup
+            };
         }
 
         public async Task<ModelRevokeTicketResponse> RevokeBookedTicket(Guid BookedTicketId, Guid TicketCode, int QuantityToRevoke )
         {
             var BookedTicket = await _db.BookedTickets
                 .Include(bt => bt.TicketCodeNavigation)
-                .FirstOrDefaultAsync(bt => bt.BookedTicketId == BookedTicketId);
+                .FirstOrDefaultAsync(bt => bt.BookedTicketId == BookedTicketId && bt.TicketCode == TicketCode);
 
             if (BookedTicket == null)
             {
@@ -104,7 +158,7 @@ namespace Acceloka.Services
             return response;
         }
 
-        public async Task<List<ModelEditBookedTicketResponse>> EditBookedTIcketQuantity(Guid BookedTicketId, ModelEditBookedTicketRequest request)
+        public async Task<List<ModelEditBookedTicketResponse>> EditBookedTicketQuantity(Guid BookedTicketId, ModelEditBookedTicketRequest request)
         {
             var ResponseList = new List<ModelEditBookedTicketResponse>();
 

@@ -5,6 +5,8 @@ namespace Acceloka.Entities;
 
 public partial class BookedTicket
 {
+    public int Id { get; set; }
+
     public Guid BookedTicketId { get; set; }
 
     public Guid TicketCode { get; set; }
@@ -13,6 +15,10 @@ public partial class BookedTicket
 
     public decimal Price { get; set; }
 
+    public DateTimeOffset ScheduledDate { get; set; }
+
+    public DateTimeOffset PurchaseDate { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public string CreatedBy { get; set; } = null!;
@@ -20,10 +26,6 @@ public partial class BookedTicket
     public DateTimeOffset UpdatedAt { get; set; }
 
     public string UpdatedBy { get; set; } = null!;
-
-    public DateTimeOffset PurchaseDate { get; set; }
-
-    public DateTimeOffset ScheduledDate { get; set; }
 
     public virtual Ticket TicketCodeNavigation { get; set; } = null!;
 }

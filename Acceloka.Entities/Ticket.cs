@@ -11,11 +11,13 @@ public partial class Ticket
 
     public string CategoryName { get; set; } = null!;
 
-    public DateTimeOffset EventDateStart { get; set; }
-
     public int Quota { get; set; }
 
     public decimal Price { get; set; }
+
+    public DateTimeOffset EventDateStart { get; set; }
+
+    public DateTimeOffset EventDateEnd { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 
@@ -24,8 +26,6 @@ public partial class Ticket
     public DateTimeOffset UpdatedAt { get; set; }
 
     public string UpdatedBy { get; set; } = null!;
-
-    public DateTimeOffset EventDateEnd { get; set; }
 
     public virtual ICollection<BookedTicket> BookedTickets { get; set; } = new List<BookedTicket>();
 }
