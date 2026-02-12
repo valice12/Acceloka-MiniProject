@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
-using Acceloka.Services;
-using Acceloka.Models;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+﻿using Acceloka.Features.Tickets.Queries.GetAvailableTickets;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Acceloka.Controllers
 {
@@ -11,24 +8,19 @@ namespace Acceloka.Controllers
     [ApiController]
     public class ControllerTicket : ControllerBase
     {
-        public readonly ServiceTicket _service;
+        private readonly IMediator _mediator;
 
-        public ControllerTicket(ServiceTicket service)
+        public ControllerTicket(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
         }
-      
+
         [HttpGet("get-available-ticket")]
-        public async Task<IActionResult> GetTickets([FromQuery] ModelTicketSearchRequest model)
+        public async Task<IActionResult> GetTickets([FromQuery] GetAvailableTicketsQuery query)
         {
-            if (ModelState.IsValid == false) return BadRequest("Error gatau kenapa");
-
-            if(model == null) return BadRequest("tidak ada data null");
-
-            var data = await _service.GetAvailableTicketList(model);
-            return Ok(data);
-
+            
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
-
     }
 }

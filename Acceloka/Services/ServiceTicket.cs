@@ -16,67 +16,70 @@ namespace Acceloka.Services
 
         public async Task<List<object>> GetAvailableTicketList(ModelTicketSearchRequest request)
         {
-            var Query = _db.Tickets
+            var query = _db.Tickets
                 .Where(t => t.Quota > 0)
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(request.CategoryName))
+            if (!string.IsNullOrEmpty(request.categoryName))
             {
-                Query = Query.Where(t => t.CategoryName == request.CategoryName);
+                query = query.Where(t => t.CategoryName == request.categoryName);
             }
             
-            if (!string.IsNullOrEmpty(request.TicketCode))
+            if (!string.IsNullOrEmpty(request.ticketCode))
             {
-                Query = Query.Where(t => t.TicketCode.ToString().Contains(request.TicketCode));
+                query = query.Where(t => t.TicketCode.ToString().Contains(request.ticketCode));
             }
 
-            if (!string.IsNullOrEmpty(request.TicketName))
+            if (!string.IsNullOrEmpty(request.ticketName))
             {
-                Query = Query.Where(t => t.TicketName.Contains(request.TicketName));
+                query = query.Where(t => t.TicketName.Contains(request.ticketName));
             }
 
-            if (request.Price.HasValue)
+            if (request.priceMin.HasValue)
             {
-                Query = Query.Where(t => t.Price == request.Price.Value);
+                query = query.Where(t => t.Price == request.priceMin.Value);
             }
 
-            if (request.MinEventDate.HasValue)
+            if (request.priceMax.HasValue)
             {
-                Query = Query.Where(t => t.EventDateStart >= request.MinEventDate.Value);
+                query = query.Where(t => t.Price == request.priceMax.Value);
             }
 
-            if (request.MaxEventDate.HasValue)
+            if (request.minEventDate.HasValue)
             {
-                Query = Query.Where(t => t.EventDateStart <= request.MaxEventDate.Value);
+                query = query.Where(t => t.EventDateStart >= request.minEventDate.Value);
             }
 
-            // Ganti Urutan Datanya Dari Sini Nanti
-            string SortColumn = request.OrderBy.ToLower() ?? "TicketCode";
-
-            // Ini Buat Ascending Atau Descending
-            bool IsAscending = (request.OrderState.ToLower() ?? "asc") == "asc";
-
-            Query = SortColumn switch
+            if (request.maxEventDate.HasValue)
             {
-                "Categoryname" => IsAscending ? Query.OrderBy(t => t.CategoryName) : Query.OrderByDescending(t => t.CategoryName),
-                "ticketname" => IsAscending ? Query.OrderBy(t => t.TicketName) : Query.OrderByDescending(t => t.TicketName),
-                "price" => IsAscending ? Query.OrderBy(t => t.Price) : Query.OrderByDescending(t => t.Price),
-                "eventdate" => IsAscending ? Query.OrderBy(t => t.EventDateStart) : Query.OrderByDescending(t => t.EventDateStart),
-                _ => IsAscending ? Query.OrderBy(t => t.TicketCode) : Query.OrderByDescending(t => t.TicketCode),
+                query = query.Where(t => t.EventDateStart <= request.maxEventDate.Value);
+            }
+
+            string SortColumn = request.orderBy.ToLower() ?? "TicketCode";
+
+            bool IsAscending = (request.orderState.ToLower() ?? "asc") == "asc";
+
+            query = SortColumn switch
+            {
+                "Categoryname" => IsAscending ? query.OrderBy(t => t.CategoryName) : query.OrderByDescending(t => t.CategoryName),
+                "ticketname" => IsAscending ? query.OrderBy(t => t.TicketName) : query.OrderByDescending(t => t.TicketName),
+                "price" => IsAscending ? query.OrderBy(t => t.Price) : query.OrderByDescending(t => t.Price),
+                "eventdate" => IsAscending ? query.OrderBy(t => t.EventDateStart) : query.OrderByDescending(t => t.EventDateStart),
+                _ => IsAscending ? query.OrderBy(t => t.TicketCode) : query.OrderByDescending(t => t.TicketCode),
 
             };
 
-            var result = await Query
+            var result = await query
                 .Select(t => new
                 {
-                   TicketCode = t.TicketCode,
-                   TicketName = t.TicketName,
-                   CategoryName = t.CategoryName,
-                   Price = t.Price,
-                   EventDate = t.EventDateStart,
-                   EventDateEnd = t.EventDateEnd,
-                   Quota = t.Quota
+                   ticketCode = t.TicketCode,
+                   ticketName = t.TicketName,
+                   categoryName = t.CategoryName,
+                   price = t.Price,
+                   eventDate = t.EventDateStart,
+                   eventDateEnd = t.EventDateEnd,
+                   quota = t.Quota
                 })
                 .ToListAsync();
 

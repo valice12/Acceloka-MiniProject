@@ -2,12 +2,12 @@
 {
     public class ModelBookTicketRequest
     {
-        public List<BookTicketItemDTO> Tickets { get; set; }
+        public List<BookTicketItemDto> Tickets { get; set; }
     }
 
-    public class BookTicketItemDTO
+    public class BookTicketItemDto
     {
-        public Guid TicketCode { get; set; }
-        public int Quantity { get; set; }
+        public Guid ticketCode { get; set; }
+        public int quantity { get; set; }
     }   
 }

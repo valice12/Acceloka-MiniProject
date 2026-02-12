@@ -1,10 +1,9 @@
-﻿using Acceloka.Entities;
-using Acceloka.Models;
-using Acceloka.Services;
+﻿using Acceloka.Features.BookedTickets.Commands.BookTicket;
+using Acceloka.Features.BookedTickets.Commands.EditBookedTicket;
+using Acceloka.Features.BookedTickets.Commands.RevokeTicket;
+using Acceloka.Features.BookedTickets.Queries.GetBookedTicketDetail;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Acceloka.Controllers
 {
@@ -12,173 +11,62 @@ namespace Acceloka.Controllers
     [ApiController]
     public class ControllerBookedTicket : ControllerBase
     {
-        private readonly ServiceBookedTicket _service;
+        private readonly IMediator _mediator;
 
-        public ControllerBookedTicket(ServiceBookedTicket service)
+        public ControllerBookedTicket(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
         }
 
-        // GET: api/v1/get-booked-ticket/{Guid}
-        [HttpGet("get-booked-ticket/{BookedTicketId}")]
-        public async Task<IActionResult> GetBookedTicket([FromRoute] Guid BookedTicketId)
+        // GET: api/v1/get-booked-ticket/{bookedTicketId}
+        [HttpGet("get-booked-ticket/{bookedTicketId}")]
+        public async Task<IActionResult> GetBookedTicket([FromRoute] Guid bookedTicketId)
         {
-            if (ModelState.IsValid == false) return BadRequest("Error");
-            
-            try
-            {
-                var result = await _service.GetBookedTicketList(BookedTicketId);
-                return Ok(result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = ex.Message,
-                    Status = 404
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ProblemDetails
-                {
-                    Title = "Internal Server Error",
-                    Detail = ex.Message,
-                    Status = 500
-                });
-            }
+            // Kirim Query ke Handler
+            var query = new GetBookedTicketDetailQuery { BookedTicketId = bookedTicketId };
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
 
-
-        // Add this POST action to ControllerBookedTicket
-        // Expect JSON in the request body. Validate null body to avoid 500.
+        // POST: api/v1/book-ticket
         [HttpPost("book-ticket")]
-        public async Task<IActionResult> BookTicket([FromBody] ModelBookTicketRequest request)
+        public async Task<IActionResult> BookTicket([FromBody] BookTicketCommand command)
         {
-
-            if (!ModelState.IsValid) return ValidationProblem(ModelState);
-
-            if (request == null || request.Tickets == null || !request.Tickets.Any())
-            {
-                return BadRequest(new ProblemDetails
-                {   
-                    Title = "Validation Error",
-                    Detail = "Request body cannot be null or empty.",
-                    Status = 400
-                });
-            }
-
-            try
-            {
-                var result = await _service.PostBookedTicket(request);
-                return Ok(result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = ex.Message,
-                    Status = 404
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Validation Error",
-                    Detail = ex.Message,
-                    Status = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ProblemDetails
-                {
-                    Title = "Internal Server Error",
-                    Detail = ex.Message,
-                    Status = 500
-                });
-            }
+            // Kirim Command ke Handler
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
 
-        // PUT api/<ControllerBookedTicket>/5
-        [HttpPut("edit-booked-ticket/{BookedTicketId}")]
+        // PUT: api/v1/edit-booked-ticket/{bookedTicketId}
+        [HttpPut("edit-booked-ticket/{bookedTicketId}")]
         public async Task<IActionResult> PutBookedTicket(
-            [FromRoute] Guid BookedTicketId,
-            [FromBody] ModelEditBookedTicketRequest request)
+            [FromRoute] Guid bookedTicketId,
+            [FromBody] EditBookedTicketCommand command)
         {
-            try
-            {
-                var result = await _service.EditBookedTicketQuantity(BookedTicketId, request);
+            // Mapping ID dari URL ke dalam Command
+            command.BookedTicketId = bookedTicketId;
 
-                return Ok(result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Not Found",
-                    Detail = ex.Message,
-                    Status = 404
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Validation Error",
-                    Detail = ex.Message,
-                    Status = 400
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ProblemDetails
-                {
-                    Title = "Internal Server Error",
-                    Detail = ex.Message,
-                    Status = 500
-                });
-
-            }
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
-        // DELETE api/<ControllerBookedTicket>/5
-        [HttpDelete("revoke-ticket/{BookedTicketId}/{TicketCode}/{Quantity}")]
+
+        // DELETE: api/v1/revoke-ticket/...
+        [HttpDelete("revoke-ticket/{bookedTicketId}/{ticketCode}/{quantity}")]
         public async Task<IActionResult> RevokeTicket(
-            [FromRoute] Guid BookedTicketId, 
-            [FromRoute] Guid TicketCode, 
-            [FromRoute] int Quantity)
+            [FromRoute] Guid bookedTicketId,
+            [FromRoute] Guid ticketCode,
+            [FromRoute] int quantity)
         {
-
-            try
-            { 
-                var result = await _service.RevokeBookedTicket(BookedTicketId, TicketCode, Quantity);
-
-                if (result == null) return NotFound(new { title = "Data tidak ditemukan" }); ;
-
-                return Ok(result);
-            } catch (ArgumentException ex)
+            // Mapping Parameter URL ke Command
+            var command = new RevokeTicketCommand
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Validation Error",
-                    Detail = ex.Message,
-                    Status = 400
-                });
-            } catch (KeyNotFoundException ex)
-            {
-                return NotFound(new ProblemDetails
-                { 
-                    Title = "Not Found",
-                    Detail = ex.Message,
-                    Status = 404
-                });
+                BookedTicketId = bookedTicketId,
+                TicketCode = ticketCode,
+                Quantity = quantity
+            };
 
-            }
-
-
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
     }
 }

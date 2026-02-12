@@ -21,11 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\" />
+    <None Include=".github\copilot-instructions.md" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include=".github\copilot-instructions.md" />
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -2,9 +2,9 @@
 {
     public class ModelEditBookedTicketResponse
     {
-        public string TicketCode { get; set; }
-        public string StringName { get; set; }
-        public string CategoryName { get; set; }
-        public int RemainingQuantity { get; set; }
+        public string ticketCode { get; set; }
+        public string ticketName { get; set; }
+        public string categoryName { get; set; }
+        public int remainingQuantity { get; set; }
     }
 }

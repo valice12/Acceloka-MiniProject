@@ -1,7 +1,11 @@
+using Acceloka.Behaviors;
 using Acceloka.Entities;
+using Acceloka.Middleware;
+using Acceloka.Services;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using Acceloka.Services;
+using System.Reflection;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -14,33 +18,49 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
+    Log.Information("Starting Web Host");
+
     var builder = WebApplication.CreateBuilder(args);
+    var configuration = builder.Configuration;
 
     builder.Host.UseSerilog();
 
-    var configuration = builder.Configuration;
-
-    builder.Services.AddTransient<AccelokaContext>();
-    builder.Services.AddTransient<ServiceTicket>();
-    builder.Services.AddTransient<ServiceBookedTicket>();
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
 
-    builder.Services.AddDbContextPool<AccelokaContext>(options =>
+    builder.Services.AddEntityFrameworkSqlServer();
+    builder.Services.AddDbContext<AccelokaContext>(options =>
     {
         var conString = configuration.GetConnectionString("DefaultConnection");
         options.UseSqlServer(conString);
+
     });
+
+    builder.Services.AddTransient<ServiceTicket>();
+    builder.Services.AddTransient<ServiceBookedTicket>();
+
+    builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+    builder.Services.AddMediatR(cfg =>
+    {
+        cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+        cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+    });
+
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    builder.Services.AddProblemDetails();
 
     var app = builder.Build();
 
-    app.UseSerilogRequestLogging();
+    app.UseExceptionHandler(); 
+    app.UseSerilogRequestLogging(); 
 
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
     }
 
+    app.UseHttpsRedirection();
     app.UseAuthorization();
     app.MapControllers();
 

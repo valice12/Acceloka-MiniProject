@@ -2,12 +2,12 @@
 {
     public class ModelEditBookedTicketRequest
     {
-        public List<BookedTicketItemDTO> Tickets { get; set; }
+        public List<BookedTicketItemDto> Tickets { get; set; }
     }
 
-    public class BookedTicketItemDTO
+    public class BookedTicketItemDto
     {
-        public Guid TicketCode { get; set; }
-        public int Quantity { get; set; }
+        public Guid ticketCode { get; set; }
+        public int quantity { get; set; }
     }
 }

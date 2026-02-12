@@ -2,9 +2,9 @@
 {
     public class ModelRevokeTicketResponse
     {
-        public string TicketCode { get; set; }
-        public string TicketName { get; set; }
-        public string CategoryName { get; set; }
-        public int RemainingQty { get; set; }
+        public string ticketCode { get; set; }
+        public string ticketName { get; set; }
+        public string categoryName { get; set; }
+        public int remainingQuantity { get; set; }
     }
 }

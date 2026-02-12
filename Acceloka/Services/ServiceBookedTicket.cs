@@ -17,30 +17,30 @@ namespace Acceloka.Services
             _db = db;
         }
 
-        public async Task<List<ModelBookedTicketDetailResponse>> GetBookedTicketList(Guid BookedTicketId)
+        public async Task<List<ModelBookedTicketDetailResponse>> GetBookedTicketList(Guid bookedTicketId)
         {
             var result = await _db.BookedTickets
                 .Include( bt => bt.TicketCodeNavigation)
-                .Where(bt => bt.BookedTicketId == BookedTicketId)
+                .Where(bt => bt.BookedTicketId == bookedTicketId)
                 .AsNoTracking()
                 .ToListAsync();
 
             if (!result.Any())
             {
-                throw new KeyNotFoundException($"Booked Ticket with ID {BookedTicketId} not found");
+                throw new KeyNotFoundException($"Booked Ticket with ID {bookedTicketId} not found");
             }
 
             var NewResult = result
                 .GroupBy(bt => bt.TicketCodeNavigation.CategoryName)
                 .Select(group => new ModelBookedTicketDetailResponse
                 {
-                    CategoryName = group.Key,
-                    QuantityperCategory = group.Sum(bt => bt.Quantity),
-                    Tickets = group.Select(bt => new BookedTicketItemDetailDTO
+                    categoryName = group.Key,
+                    quantityPerCategory = group.Sum(bt => bt.Quantity),
+                    Tickets = group.Select(bt => new BookedTicketItemDetailDto
                     {
-                        TicketCode = bt.TicketCode,
-                        TicketName = bt.TicketCodeNavigation.TicketName,
-                        EventDate = bt.TicketCodeNavigation.EventDateStart.ToString()
+                        ticketCode = bt.TicketCode,
+                        ticketName = bt.TicketCodeNavigation.TicketName,
+                        eventDate = bt.TicketCodeNavigation.EventDateStart.ToString()
                     }).ToList()
                 }).ToList();
 
@@ -53,7 +53,7 @@ namespace Acceloka.Services
             var BookedTicketsToInsert = new List<BookedTicket>();
 
             var RequestTicketCodes = request.Tickets
-                .Select(t => t.TicketCode).ToList();
+                .Select(t => t.ticketCode).ToList();
 
             var MasterTickets = await _db.Tickets
                 .Where(t => RequestTicketCodes.Contains(t.TicketCode))
@@ -62,26 +62,26 @@ namespace Acceloka.Services
             foreach (var Item in request.Tickets)
             {
                 var MasterTicket = MasterTickets
-                    .FirstOrDefault(mt => mt.TicketCode == Item.TicketCode);
+                    .FirstOrDefault(mt => mt.TicketCode == Item.ticketCode);
                 if (MasterTicket == null)
                 {
-                    throw new KeyNotFoundException($"Ticket with TicketCode {Item.TicketCode} not found");
+                    throw new KeyNotFoundException($"Ticket with TicketCode {Item.ticketCode} not found");
                 }
                 if (MasterTicket.EventDateStart <= DateTimeOffset.UtcNow)
                 {
-                    throw new InvalidOperationException($"Cannot book ticket for TicketCode {Item.TicketCode} as the event has already started.");
+                    throw new InvalidOperationException($"Cannot book ticket for TicketCode {Item.ticketCode} as the event has already started.");
                 }
-                if (MasterTicket.Quota < Item.Quantity)
+                if (MasterTicket.Quota < Item.quantity)
                 {
-                    throw new InvalidOperationException($"Not enough quota for TicketCode {Item.TicketCode}. Available: {MasterTicket.Quota}, Requested: {Item.Quantity}");
+                    throw new InvalidOperationException($"Not enough quota for TicketCode {Item.ticketCode}. Available: {MasterTicket.Quota}, Requested: {Item.quantity}");
                 }
-                MasterTicket.Quota -= Item.Quantity;
+                MasterTicket.Quota -= Item.quantity;
 
                 var NewBooking = new BookedTicket
                 {
                     BookedTicketId = TransactionId,
                     TicketCode = MasterTicket.TicketCode,
-                    Quantity = Item.Quantity,
+                    Quantity = Item.quantity,
                     Price = MasterTicket.Price,
                     ScheduledDate = MasterTicket.EventDateStart,
                     PurchaseDate = DateTimeOffset.UtcNow,
@@ -100,21 +100,21 @@ namespace Acceloka.Services
 
             var CategoriesGroup = BookedTicketsToInsert
                 .GroupBy(bt => bt.TicketCodeNavigation.CategoryName)
-                .Select(g => new CategorySummaryDTO
+                .Select(g => new CategorySummaryDto
                 {
-                    CategoryName = g.Key,
-                    SummaryPrice = g.Sum(bt => bt.Price * bt.Quantity),
-                    Tickets = g.Select(bt => new BookedTicketDetailDTO
+                    categoryName = g.Key,
+                    summaryPrice = g.Sum(bt => bt.Price * bt.Quantity),
+                    Tickets = g.Select(bt => new BookedTicketDetailDto
                     {
-                        TicketCode = bt.TicketCode,
-                        TicketName = bt.TicketCodeNavigation.TicketName,
-                        Price = bt.Price,
+                        ticketCode = bt.TicketCode,
+                        ticketName = bt.TicketCodeNavigation.TicketName,
+                        price = bt.Price,
                     }).ToList()
                 }).ToList();
 
             return new ModelBookTicketResponse
             {
-                PriceSummary = BookedTicketsToInsert.Sum(bt => bt.Price * bt.Quantity),
+                priceSummary = BookedTicketsToInsert.Sum(bt => bt.Price * bt.Quantity),
                 TicketsPerCategory = CategoriesGroup
             };
         }
@@ -138,10 +138,10 @@ namespace Acceloka.Services
 
             var response = new ModelRevokeTicketResponse
             {
-                TicketCode = BookedTicket.TicketCode.ToString(),
-                TicketName = BookedTicket.TicketCodeNavigation.TicketName,
-                CategoryName = BookedTicket.TicketCodeNavigation.CategoryName,
-                RemainingQty = BookedTicket.Quantity
+                ticketCode = BookedTicket.TicketCode.ToString(),
+                ticketName = BookedTicket.TicketCodeNavigation.TicketName,
+                categoryName = BookedTicket.TicketCodeNavigation.CategoryName,
+                remainingQuantity = BookedTicket.Quantity
             };
 
             if (BookedTicket.Quantity == 0)
@@ -175,32 +175,32 @@ namespace Acceloka.Services
 
             foreach (var ItemRequest in request.Tickets)
             {
-                var BookedItem = ExistingBookings.FirstOrDefault(b => b.TicketCode == ItemRequest.TicketCode);
+                var BookedItem = ExistingBookings.FirstOrDefault(b => b.TicketCode == ItemRequest.ticketCode);
 
 
-                if (BookedItem == null) throw new KeyNotFoundException($"Booked Ticket with TicketCode {ItemRequest.TicketCode} not found in the existing bookings");
+                if (BookedItem == null) throw new KeyNotFoundException($"Booked Ticket with TicketCode {ItemRequest.ticketCode} not found in the existing bookings");
 
-                if (ItemRequest.Quantity < 0) throw new ArgumentException("New quantity cannot be negative");
+                if (ItemRequest.quantity < 0) throw new ArgumentException("New quantity cannot be negative");
 
-                int Difference = ItemRequest.Quantity - BookedItem.Quantity;
+                int Difference = ItemRequest.quantity - BookedItem.Quantity;
 
                 if (Difference > 0)
                 {
                     if (BookedItem.TicketCodeNavigation.Quota < Difference)
                     {
-                        throw new InvalidOperationException($"Not enough quota for TicketCode {ItemRequest.TicketCode}. Available: {BookedItem.TicketCodeNavigation.Quota}, Requested Increase: {Difference}");
+                        throw new InvalidOperationException($"Not enough quota for TicketCode {ItemRequest.ticketCode}. Available: {BookedItem.TicketCodeNavigation.Quota}, Requested Increase: {Difference}");
                     }
                 }
-                BookedItem.Quantity = ItemRequest.Quantity;
+                BookedItem.Quantity = ItemRequest.quantity;
                 BookedItem.UpdatedAt = DateTimeOffset.UtcNow;
                 BookedItem.UpdatedBy = "System";
 
                 ResponseList.Add(new ModelEditBookedTicketResponse
                 {
-                    TicketCode = BookedItem.TicketCode.ToString(),
-                    StringName = BookedItem.TicketCodeNavigation.TicketName,
-                    CategoryName = BookedItem.TicketCodeNavigation.CategoryName,
-                    RemainingQuantity = BookedItem.Quantity
+                    ticketCode = BookedItem.TicketCode.ToString(),
+                    ticketName = BookedItem.TicketCodeNavigation.TicketName,
+                    categoryName = BookedItem.TicketCodeNavigation.CategoryName,
+                    remainingQuantity = BookedItem.Quantity
                 });
             }
 

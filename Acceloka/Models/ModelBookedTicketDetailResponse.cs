@@ -2,16 +2,16 @@
 {
     public class ModelBookedTicketDetailResponse
     {
-        public int QuantityperCategory { get; set; }
-        public string CategoryName { get; set; }
+        public int quantityPerCategory { get; set; }
+        public string categoryName { get; set; }
 
-        public List<BookedTicketItemDetailDTO> Tickets { get; set; }
+        public List<BookedTicketItemDetailDto> Tickets { get; set; }
     }
 
-    public class BookedTicketItemDetailDTO
+    public class BookedTicketItemDetailDto
     {
-        public Guid TicketCode { get; set; }
-        public string TicketName { get; set; }
-        public string EventDate { get; set; }
+        public Guid ticketCode { get; set; }
+        public string ticketName { get; set; }
+        public string eventDate { get; set; }
     }
 }

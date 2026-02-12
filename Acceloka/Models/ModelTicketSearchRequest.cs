@@ -7,16 +7,17 @@ namespace Acceloka.Models
         // Nggak tau boleh atau nggak, tapi model kita bikin banyakan supaya ga ganggu fungsi yang lain.
         // untuk Search tidak perlu Validation, karena kita mau read dari database
 
-        public string? CategoryName { get; set; }
-        public string? TicketCode { get; set; }
-        public string? TicketName { get; set; }
-        public decimal? Price { get; set; }
-        public DateTimeOffset? MinEventDate { get; set; }
+        public string? categoryName { get; set; }
+        public string? ticketCode { get; set; }
+        public string? ticketName { get; set; }
+        public decimal? priceMin { get; set; }
+        public decimal? priceMax { get; set; }
+        public DateTimeOffset? minEventDate { get; set; }
 
-        public DateTimeOffset?  MaxEventDate { get; set; }
+        public DateTimeOffset?  maxEventDate { get; set; }
 
-        public string OrderBy { get; set; } = "TicketCode";
-        public string OrderState { get; set; } = "Asc";
+        public string orderBy { get; set; } = "TicketCode";
+        public string orderState { get; set; } = "Asc";
 
     }
 }

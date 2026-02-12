@@ -2,21 +2,21 @@
 {
     public class ModelBookTicketResponse
     {
-        public decimal PriceSummary { get; set; }
-        public List<CategorySummaryDTO> TicketsPerCategory { get; set; }
+        public decimal priceSummary { get; set; }
+        public List<CategorySummaryDto> TicketsPerCategory { get; set; }
     }
 
-    public class CategorySummaryDTO
+    public class CategorySummaryDto
     {
-        public string CategoryName { get; set; }
-        public decimal SummaryPrice { get; set; }
-        public List<BookedTicketDetailDTO> Tickets { get; set; }
+        public string categoryName { get; set; }
+        public decimal summaryPrice { get; set; }
+        public List<BookedTicketDetailDto> Tickets { get; set; }
     }
 
-    public class BookedTicketDetailDTO
+    public class BookedTicketDetailDto
     {
-        public Guid TicketCode { get; set; }
-        public string TicketName { get; set; }
-        public decimal Price { get; set; }
+        public Guid ticketCode { get; set; }
+        public string ticketName { get; set; }
+        public decimal price { get; set; }
     }
 }
