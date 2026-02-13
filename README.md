@@ -25,33 +25,30 @@ http://localhost:5287/api/v1/get-booked-ticket/{bookedTicketId}
 <br>
 Post BookTicket (for booking ticket)
 http://localhost:5287/api/v1/book-ticket
-
-{
-  "tickets": [
-    {
-      "ticketCode": "5f0d101f-e40c-4a2b-8af4-4af181c7fd67",
-      "quantity": 2
-    },
-    {
-      "ticketCode": "69ADA74C-1A75-4A1B-B6DA-927317C12D47",
-      "quantity": 1
-    }
-  ]
-}
+{<br>
+  "tickets": [<br>
+    {<br>
+      "ticketCode": "5f0d101f-e40c-4a2b-8af4-4af181c7fd67",<br>
+      "quantity": 2<br>
+    },<br>
+    {<br>
+      "ticketCode": "69ADA74C-1A75-4A1B-B6DA-927317C12D47",<br>
+      "quantity": 1<br>
+    }<br>
+  ]<br>
+}<br>
 <br>
 Delete Revoke Ticket 
 http://localhost:5287/api/v1/revoke-ticket/{bookedTicketId}/{ticketId}/{quantity of how much you want to delete}
-
 <br>
 Put EditBookedTicket
 http://localhost:5287/api/v1/edit-booked-ticket/{bookedTicket}
-// basically the same as delete revoke ticket, but it can go up and down and can't be deleted
-
-{
-  "tickets": [
-    {
-      "ticketCode": "69ada74c-1a75-4a1b-b6da-927317c12d47",
-      "quantity": 3
-    }
-  ]
-}
+// basically the same as delete revoke ticket, but it can go up and down and can't be deleted<br>
+{<br>
+  "tickets": [<br>
+    {<br>
+      "ticketCode": "69ada74c-1a75-4a1b-b6da-927317c12d47",<br>
+      "quantity": 3<br>
+    }<br>
+  ]<br>
+}<br>
