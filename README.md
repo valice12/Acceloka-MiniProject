@@ -16,13 +16,13 @@ Database Migration Sql in .Entities Folder
 
 
 <h2> Access </h2>
---------------------------------------------------------------------------------------------------------
+
 Get Data Ticket Available
 http://localhost:5287/api/v1/get-available-ticket/
---------------------------------------------------------------------------------------------------------
+<br>
 Get Data Booked Ticket 
 http://localhost:5287/api/v1/get-booked-ticket/{bookedTicketId}
---------------------------------------------------------------------------------------------------------
+<br>
 Post BookTicket (for booking ticket)
 http://localhost:5287/api/v1/book-ticket
 
@@ -38,12 +38,11 @@ http://localhost:5287/api/v1/book-ticket
     }
   ]
 }
-
---------------------------------------------------------------------------------------------------------
+<br>
 Delete Revoke Ticket 
 http://localhost:5287/api/v1/revoke-ticket/{bookedTicketId}/{ticketId}/{quantity of how much you want to delete}
 
---------------------------------------------------------------------------------------------------------
+<br>
 Put EditBookedTicket
 http://localhost:5287/api/v1/edit-booked-ticket/{bookedTicket}
 // basically the same as delete revoke ticket, but it can go up and down and can't be deleted
