@@ -1,5 +1,6 @@
 <h1> ALL ID SHOWED IN HERE JUST DUMMY AND NOT AN ACTUAL ID FROM REAL LIFE PERSON</h1>
 
+<h2> Please Look at appsettings.json and appsettings.Default.json to Configure your database first </h2>
 <h2> Nuget Packages </h2>
 
 <h3> Project </h3>
@@ -54,3 +55,4 @@ http://localhost:5287/api/v1/edit-booked-ticket/{bookedTicket}
     }<br>
   ]<br>
 }<br>
+
