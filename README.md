@@ -59,3 +59,10 @@ http://localhost:5287/api/v1/edit-booked-ticket/{bookedTicket}
   ]<br>
 }<br>
 
+
+pull this branch
+open terminal 
+dotnet restore
+dotnet build
+set Acceloka folder to startup
+
