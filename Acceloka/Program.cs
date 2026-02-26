@@ -36,6 +36,17 @@ try
 
     });
 
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowReactApp",
+            policy =>
+            {
+                policy.WithOrigins("http://localhost:3000") // URL React kamu
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
+    });
+
     builder.Services.AddTransient<ServiceTicket>();
     builder.Services.AddTransient<ServiceBookedTicket>();
 
@@ -51,6 +62,8 @@ try
     builder.Services.AddProblemDetails();
 
     var app = builder.Build();
+
+    app.UseCors("AllowReactApp");
 
     app.UseExceptionHandler(); 
     app.UseSerilogRequestLogging(); 
