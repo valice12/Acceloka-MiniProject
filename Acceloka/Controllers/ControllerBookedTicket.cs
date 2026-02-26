@@ -2,6 +2,7 @@
 using Acceloka.Features.BookedTickets.Commands.EditBookedTicket;
 using Acceloka.Features.BookedTickets.Commands.RevokeTicket;
 using Acceloka.Features.BookedTickets.Queries.GetBookedTicketDetail;
+using Acceloka.Features.BookedTickets.Queries.GetBookedTicketList;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,32 @@ namespace Acceloka.Controllers
             // Kirim Query ke Handler
             var query = new GetBookedTicketDetailQuery { BookedTicketId = bookedTicketId };
             var result = await _mediator.Send(query);
+
+            if (result == null || !result.Any())
+            {
+                return NotFound("No booked tickets found.");
+            }
+
+            return Ok(result);
+        }
+
+        // show All booked Ticket
+        [HttpGet("get-all-booked-tickets")]
+        public async Task<IActionResult> GetAllBookedTickets()
+        {
+            var query = new GetAllBookedTicketsQuery();
+            var result = await _mediator.Send(query);
+
+            if (result == null || !result.ListBookedTickets.Any())
+            {
+                return Problem(
+                    detail: "No booked tickets found in the system.",
+                    instance: HttpContext.Request.Path,
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Data Empty"
+                );
+            }
+
             return Ok(result);
         }
 
