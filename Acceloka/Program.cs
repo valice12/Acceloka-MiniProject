@@ -41,7 +41,7 @@ try
         options.AddPolicy("AllowReactApp",
             policy =>
             {
-                policy.WithOrigins("http://localhost:3000") // URL React kamu
+                policy.WithOrigins("http://192.168.18.34:8081") // URL React kamu
                       .AllowAnyHeader()
                       .AllowAnyMethod();
             });
